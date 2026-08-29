@@ -1,182 +1,330 @@
-# Gram Vyapaar
+# Gram Vyapaar (ग्राम व्यापार)
 
-AI-driven hyper-local business feasibility and financial structuring assistant for rural
-micro-entrepreneurs. Built for **Smart India Hackathon 2026, Problem Statement 26091**
-(Ministry of Social Justice & Empowerment).
-
-This repository is meant to be **run with only the two `.env` files edited** — everything
-else (schema, seed data, routes, UI) is already wired together.
+> **AI-Driven Hyper-Local Business Advisory & Concessional Financial Structuring Platform**  
+> *Developed for Smart India Hackathon (SIH) | Ministry of Social Justice & Empowerment (MoSJE)*  
+> *Problem Statements: PS 26091 (Hyper-Local Advisory) & PS 26092 (Scheme Matching & Channel Routing)*
 
 ---
 
-## 1. What you need to edit
+## Overview
 
-```
-backend/.env    ← copy from backend/.env.example
-frontend/.env   ← copy from frontend/.env.example
-```
+**Gram Vyapaar** is an institutional-grade digital platform designed to bridge the gap between marginalized rural micro-entrepreneurs (Scheduled Caste beneficiaries) and government-backed concessional credit schemes (NSFDC / NSKFDC).
 
-That's it. Copy the two `.example` files, fill in the values below, and everything else works
-as-is.
+While the government provides concessional loans covering up to **90% of project costs** (with a **10% beneficiary margin contribution**), rural entrepreneurs frequently struggle due to lack of localized market intelligence, financial structuring confusion, and difficulty navigating the offline Channel Finance System.
 
-### `backend/.env` — required values
-
-| Variable | What to put | Required? |
-|---|---|---|
-| `DATABASE_URL` | Your Neon Postgres connection string | **Yes** |
-| `JWT_SECRET` | Any long random string | **Yes** |
-| `REFRESH_TOKEN_SECRET` | A *different* long random string | **Yes** |
-| `AADHAAR_HASH_SALT` | Any random string | **Yes** |
-| `GEMINI_API_KEY` | Your Gemini API key (from [Google AI Studio](https://aistudio.google.com/apikey)) | Only for live AI report generation — the seeded "Sunita" demo persona works without it |
-| `REDIS_URL` | Leave as-is if using `docker-compose up`, or your Upstash URL | No — falls back to in-memory rate limiting if unset |
-| Everything else | Leave the defaults | — |
-
-### `frontend/.env`
-
-Leave as the example — it's already configured to talk to `localhost:4000` via Vite's dev
-proxy. Only change `VITE_API_BASE_URL` if you deploy the backend somewhere else.
+Gram Vyapaar delivers a unified solution:
+1. **Deterministic Financial Structuring**: Computes exact project costs, loan eligibility, concessional interest rates, and quarterly reducing-balance amortization schedules with statutory moratoriums.
+2. **AI Hyper-Local Business Feasibility Advisory**: Generates actionable, location-specific business feasibility reports (Market Reach, SWOT, Threats, Pricing, Underserved Niches) grounded in official scheme circulars.
+3. **Real-Time Competitor Density Mapping**: Integrates OpenStreetMap (Overpass API) to analyze local commercial saturation within a 5–10 km radius.
+4. **Intelligent Channel Partner Routing**: Directs applications to the nearest authorized State Channelizing Agencies (SCAs), Public Sector Banks (PSBs), and RRBs while automatically filtering out institutions with high Non-Performing Assets (NPAs).
+5. **Privacy-Preserving Deduplication**: Protects public funds using salted Aadhaar cryptographic hashing and PostgreSQL trigram similarity to detect duplicate applications without storing sensitive identity data.
 
 ---
 
-## 2. One-time database setup (Neon)
+## System Architecture
 
-1. Create a project at [neon.tech](https://neon.tech), copy the connection string into
-   `backend/.env` as `DATABASE_URL`.
-2. Open Neon's SQL editor and run once:
+```
+                                      GRAM VYAPAAR ARCHITECTURE
+                                  
+            [ Rural Entrepreneur / CSC Operator / Channel Partner / Admin ]
+                                          │
+                                          ▼
+     ┌────────────────────────────────────────────────────────────────────────┐
+     │                     FRONTEND LAYER (React 18 + Vite + TS)              │
+     │  • Tailwind CSS Design System (High-contrast, accessible UI)           │
+     │  • Multilingual Localization Engine (i18next: English & Hindi)         │
+     │  • Dynamic Amortization & Cashflow Visualization (Recharts)            │
+     │  • Geospatial Competitor & Partner Map (Leaflet / React-Leaflet)       │
+     │  • 1-Click Bank-Ready PDF Business Plan Generator                      │
+     └───────────────────────────────────┬────────────────────────────────────┘
+                                         │ HTTP REST APIs
+                                         ▼
+     ┌────────────────────────────────────────────────────────────────────────┐
+     │                     BACKEND API (Node.js + Express + TS)               │
+     │  • Dual-Token Auth (15-min Access JWT + 7-day httpOnly Refresh Cookie) │
+     │  • Role-Based Access Control (ENTREPRENEUR, PARTNER, ADMIN)            │
+     │  • Pure Deterministic Financial Math & Amortization Engine             │
+     │  • Overpass OpenStreetMap Geo-Density Aggregator                       │
+     │  • Salted Aadhaar Hash + Trigram Duplicate Detection Engine            │
+     │  • Structured Logging (Pino) & Distributed Rate Limiting (Redis)       │
+     └───────────────────┬─────────────────────────────────┬──────────────────┘
+                         │                                 │
+                         ▼                                 ▼
+     ┌──────────────────────────────────────┐   ┌─────────────────────────────┐
+     │           DATABASE LAYER             │   │       AI & RAG ENGINE       │
+     │  • PostgreSQL (Neon Serverless)      │   │  • Google Gemini 2.0 Flash  │
+     │  • Prisma ORM                        │   │    (Structured JSON Schema) │
+     │  • pgvector (Embedding Search)       │   │  • Grounded Fallback Engine │
+     │  • pg_trgm (Fuzzy Trigram Index)     │   │    (Zero-latency demo mode) │
+     └──────────────────────────────────────┘   └─────────────────────────────┘
+```
+
+---
+
+## Core Technical Features
+
+### 1. Deterministic Financial Math Engine
+The core calculation strictly enforces MoSJE/NSFDC lending rules with 100% mathematical precision:
+- **Project Cost** = $\text{Margin Capital} / 0.10$
+- **Loan Amount** = $\text{Project Cost} \times 0.90$
+- **Micro Finance Scheme** ($\text{Project Cost} \le \text{₹1,40,000}$):
+  - Interest Rate: **6.50% p.a.**
+  - Tenure: **36 Months** (12 Quarters)
+  - Moratorium: **3 Months** (1 Quarter principal moratorium)
+- **Term Loan Scheme** ($\text{₹1,40,000} < \text{Project Cost} \le \text{₹50,00,000}$):
+  - Interest Rate: **8.00% p.a.**
+  - Tenure: **84 Months** (28 Quarters)
+  - Moratorium: **6 Months** (2 Quarters principal moratorium)
+- Generates a complete quarterly reducing-balance amortization table including opening balance, principal repayment, interest component, quarterly installment, and closing balance.
+
+### 2. Grounded AI Feasibility Advisory & Fallback Resilience
+- Utilizes Google Gemini 2.0 Flash with strict JSON Schema constraints.
+- Injects vector-retrieved scheme chunks (`pgvector`) into the context window to prevent hallucinations.
+- Features an integrated **Grounded Fallback Engine** that generates realistic, data-backed reports even during API quota exhaustion or offline hackathon demo conditions.
+
+### 3. OpenStreetMap Overpass Geospatial Engine
+- Queries live Overpass API nodes (`shop=*`, `amenity=*`, `craft=*`) within the applicant's village/block coordinates.
+- Returns real competitor density counts and map markers to calculate market saturation.
+- Gracefully defaults to regional demographic baselines if external OSM servers experience latency.
+
+### 4. Channel Partner Routing with NPA Safeguards (PS 26092)
+- Calculates Haversine distances to nearby State Channelizing Agencies (SCAs), Public Sector Banks (PSBs), and Regional Rural Banks (RRBs).
+- Automatically filters out institutions with `hasHighNPA = true` to protect applicants from disbursement stalls.
+
+### 5. Privacy-Preserving Duplicate Citizen Detection
+- Computes a salted cryptographic hash: $\text{SHA256}(\text{AadhaarLast4} + \text{DOB} + \text{SALT})$.
+- Uses PostgreSQL `pg_trgm` fuzzy similarity across names, villages, and blocks.
+- Suspicious matches are routed to an administrative review queue rather than auto-rejected, preventing false positives on common rural names.
+
+---
+
+## Technology Stack
+
+| Layer | Technologies |
+|---|---|
+| **Frontend** | React 18, TypeScript, Vite, Tailwind CSS, Lucide React, Framer Motion, Recharts, React-Leaflet, i18next, html2canvas, jsPDF |
+| **Backend** | Node.js, Express.js, TypeScript, Prisma ORM, Zod, Argon2, JSON Web Tokens, Pino Logger, Helmet, CORS |
+| **Database** | PostgreSQL (Neon Serverless compatible), `pgvector` extension, `pg_trgm` extension |
+| **Cache & Queue** | Redis (Docker / Upstash compatible) for rate limiting |
+| **AI / ML** | Google Gemini API (`gemini-2.0-flash`, `text-embedding-004`), Grounded Rule-Engine Fallback |
+| **Geodata** | OpenStreetMap Overpass API, Leaflet Tiles |
+| **Testing** | Vitest (Unit & Integration tests), Playwright (E2E testing) |
+| **DevOps** | Docker, Docker Compose, GitHub Actions CI |
+
+---
+
+## Directory Structure
+
+```
+.
+├── backend/
+│   ├── prisma/
+│   │   ├── schema.prisma              # Database schema (PostgreSQL + pgvector + pg_trgm)
+│   │   └── seed.ts                    # Official NSFDC scheme data & Sunita demo persona
+│   ├── src/
+│   │   ├── config/                    # Environment validation, Pino logger, rate-limiter
+│   │   ├── controllers/               # Auth, Calculator, Report, Admin, Partner, Geodata handlers
+│   │   ├── middleware/                # JWT auth, Role-Based Access Control, Error handling
+│   │   ├── routes/                    # API route definitions
+│   │   ├── services/
+│   │   │   ├── ai/                    # Gemini Provider & Grounded Fallback Provider
+│   │   │   ├── duplicate.service.ts   # Salted Aadhaar hash & trigram fuzzy matching
+│   │   │   ├── financial.service.ts   # Deterministic financial math & amortization schedules
+│   │   │   ├── overpass.service.ts    # OpenStreetMap Overpass API competitor client
+│   │   │   └── rag.service.ts         # pgvector semantic search over scheme documentation
+│   │   ├── utils/                     # Custom ApiError, hashing, and math helpers
+│   │   ├── app.ts                     # Express application configuration
+│   │   └── index.ts                   # Server entry point
+│   ├── tests/
+│   │   ├── financial.test.ts          # Vitest boundary condition tests for financial engine
+│   │   └── health.test.ts             # Health check tests
+│   ├── .env.example                   # Backend environment template
+│   └── package.json
+│
+├── frontend/
+│   ├── public/
+│   │   └── locales/                   # English (en.json) & Hindi (hi.json) translations
+│   ├── src/
+│   │   ├── components/
+│   │   │   ├── calculator/            # Interactive financial sliders & amortization tables
+│   │   │   ├── common/                # Navbar, Footer, LanguageToggle, DemoPersonaBanner
+│   │   │   ├── map/                   # Leaflet OSM Competitor & Partner locator
+│   │   │   ├── pdf/                   # 1-Click Bank-Ready Business Plan PDF template
+│   │   │   ├── report/                # Dynamic AI feasibility cards (SWOT, Pricing, Threats)
+│   │   │   ├── ui/                    # Reusable accessible UI primitives
+│   │   │   └── wizard/                # Multi-step intake wizard (Location, Capital, Category)
+│   │   ├── context/                   # AuthContext & LanguageContext
+│   │   ├── hooks/                     # Custom application hooks
+│   │   ├── pages/                     # LandingPage, IntakeWizard, Report, Admin, Partner Dashboards
+│   │   ├── services/                  # Axios API clients
+│   │   ├── types/                     # Shared TypeScript interfaces
+│   │   ├── App.tsx
+│   │   └── main.tsx
+│   ├── .env.example                   # Frontend environment template
+│   ├── tailwind.config.js
+│   ├── vite.config.ts
+│   └── package.json
+│
+├── docker-compose.yml                 # Multi-container orchestration (Backend + Frontend + Redis)
+├── Dockerfile.backend
+├── Dockerfile.frontend
+└── README.md
+```
+
+---
+
+## Getting Started
+
+### Prerequisites
+- **Node.js**: v18.0.0 or higher
+- **npm**: v9.0.0 or higher
+- **PostgreSQL Database**: Neon Serverless Postgres instance (recommended) or local PostgreSQL with `vector` and `pg_trgm` extensions enabled.
+
+---
+
+### Step 1: Clone and Configure Environment
+
+```bash
+# Clone the repository
+git clone https://github.com/your-username/gram-vyapaar.git
+cd gram-vyapaar
+
+# Setup backend environment
+cp backend/.env.example backend/.env
+
+# Setup frontend environment
+cp frontend/.env.example frontend/.env
+```
+
+#### Edit `backend/.env`:
+```env
+PORT=4000
+NODE_ENV=development
+FRONTEND_ORIGIN=http://localhost:5173
+
+# Neon PostgreSQL connection string
+DATABASE_URL="postgresql://user:password@ep-sample-123.ap-southeast-1.aws.neon.tech/neondb?sslmode=require"
+
+# Auth secrets
+JWT_SECRET="your-secure-jwt-secret-key-32-chars-min"
+JWT_ACCESS_EXPIRES_IN="15m"
+REFRESH_TOKEN_SECRET="your-secure-refresh-token-secret-key-32-chars-min"
+REFRESH_TOKEN_EXPIRES_IN="7d"
+REFRESH_TOKEN_COOKIE_NAME="gv_refresh_token"
+
+# Google Gemini API key (optional — built-in fallback operates if left empty)
+GEMINI_API_KEY="your-gemini-api-key"
+GEMINI_MODEL="gemini-2.0-flash"
+GEMINI_EMBEDDING_MODEL="text-embedding-004"
+
+# Identity hashing salt
+AADHAAR_HASH_SALT="your-custom-salt-value"
+DUPLICATE_SIMILARITY_THRESHOLD="0.45"
+
+# Geodata
+OVERPASS_API_URL="https://overpass-api.de/api/interpreter"
+```
+
+---
+
+### Step 2: Database Initialization (Neon PostgreSQL)
+
+1. Open your Neon SQL Editor and execute:
    ```sql
    CREATE EXTENSION IF NOT EXISTS vector;
    CREATE EXTENSION IF NOT EXISTS pg_trgm;
    ```
-   (`vector` powers the AI grounding search; `pg_trgm` powers fuzzy duplicate-applicant
-   matching. Both are required — the app degrades gracefully but loses those two features
-   without them.)
+2. Run database migrations and seed official scheme data:
+   ```bash
+   cd backend
+   npm install
+   npx prisma migrate dev --name init
+   npm run seed
+   ```
 
 ---
 
-## 3. Running locally (without Docker)
+### Step 3: Run the Application
 
+#### Option A: Local Development Server
+
+**Terminal 1 (Backend API):**
 ```bash
-# Backend
 cd backend
-npm install
-npx prisma migrate dev --name init   # creates all tables in your Neon DB
-npm run seed                          # loads real NSFDC scheme data + the Sunita demo persona
-npm run dev                           # http://localhost:4000
-
-# Frontend (new terminal)
-cd frontend
-npm install
-npm run dev                           # http://localhost:5173
+npm run dev
+# Server running at http://localhost:4000
 ```
 
-Open `http://localhost:5173`. Log in with the seeded demo account (`9999900001` /
-`Demo@12345`), or click **"See a sample report"** on the landing page — that route
-(`/demo/sunita`) needs no login and no live API key.
+**Terminal 2 (Frontend Client):**
+```bash
+cd frontend
+npm install
+npm run dev
+# Client running at http://localhost:5173
+```
 
-## 3b. Running with Docker
+#### Option B: Docker Compose
 
 ```bash
-cp backend/.env.example backend/.env    # fill in values
-cp frontend/.env.example frontend/.env
 docker-compose up --build
 ```
 
-This starts `backend`, `frontend`, and `redis`. Postgres stays external on Neon — there is
-no local database container, by design (see `docker-compose.yml` comments). Run the Prisma
-migration and seed script once, either against Neon directly from your host machine (as in
-§3) or via `docker-compose exec backend npm run prisma:migrate && docker-compose exec backend npm run seed`.
-
 ---
 
-## 4. Testing
+## Verification & Testing
 
 ```bash
-# Backend — financial engine unit tests (no DB needed)
-cd backend && npx vitest run tests/financial.test.ts
+# Run backend financial engine unit tests
+cd backend
+npx vitest run tests/financial.test.ts
 
-# Backend — full suite including the DB-backed integration smoke test
-cd backend && npm test
+# Run full backend test suite
+npm test
 
-# Frontend — production build / type-check
-cd frontend && npm run build
-
-# E2E happy path (needs both dev servers running + a seeded DB)
-cd tests/e2e && npm install && npx playwright install --with-deps && npm test
-```
-
-The financial engine tests are the ones to run first and trust most — they cover every
-scheme-slab boundary (₹1.40L, ₹50L), the moratorium math, and full loan amortization to
-zero. See `backend/tests/financial.test.ts`.
-
----
-
-## 5. What's real vs. seeded/mocked, and why
-
-Being upfront about this matters more than pretending everything is production-grade —
-judges (and future-you) will ask.
-
-| Piece | Status | Notes |
-|---|---|---|
-| Financial engine (slabs, EMI schedule) | **Fully real**, deterministic, unit-tested | Numbers sourced from the PS's published NSFDC/NSKFDC scheme structure — see `prisma/seed.ts` comments |
-| Competitor density map | **Real live data** | Queries the public Overpass API (OpenStreetMap) for real shop/business nodes; falls back to a clearly-labeled conservative estimate only if Overpass is unreachable |
-| AI feasibility report | **Real**, via Gemini API, RAG-grounded via pgvector | Requires `GEMINI_API_KEY`. The **one exception** is the seeded "Sunita" persona, which ships with a single statically pre-generated report so the demo never depends on a live API call |
-| Aadhaar verification | **Mocked at the exact integration point** | We hash `(Aadhaar last 4 + DOB)` for exact-match dedup and never store or verify a real Aadhaar number — there's no UIDAI sandbox access available for a hackathon build. This is a deliberate, scoped placeholder, not a hidden gap |
-| Duplicate detection (fuzzy) | **Real**, via Postgres `pg_trgm` | Flags likely duplicates for admin review rather than auto-rejecting, to avoid false positives on common names |
-| Partner routing | **Real geo-distance logic**, seeded sample partners | Haversine distance, excludes any partner flagged `hasHighNPA` |
-| Report streaming | **Not live-streamed** | Full report JSON arrives in one request; the frontend staggers the reveal of each section with Framer Motion to *look* like live generation, deliberately avoiding a persistent socket dependency during a live demo over uncertain venue wifi |
-
----
-
-## 6. Repository structure
-
-```
-backend/     Node + Express + TypeScript + Prisma API
-  prisma/schema.prisma   All data models
-  prisma/seed.ts         Real scheme data + Sunita demo persona
-  src/services/           Financial engine, AI provider, RAG, duplicate detection, Overpass
-  src/controllers/        Route handlers
-  src/routes/              Route wiring
-  tests/                   Vitest unit + integration tests
-
-frontend/    React + Vite + TypeScript + Tailwind
-  src/pages/               Route-level pages
-  src/components/          Wizard, calculator, report, map, PDF, shared UI
-  src/services/            Axios API clients
-  src/i18n/, public/locales/   English/Hindi translations
-
-tests/e2e/    Playwright end-to-end test
-
-docker-compose.yml   backend + frontend + redis (Postgres external on Neon)
-.github/workflows/ci.yml   Lint + test on every PR
+# Verify frontend TypeScript types and build bundle
+cd ../frontend
+npm run build
 ```
 
 ---
 
-## 7. Security & auth notes (for your pitch Q&A)
+## API Reference
 
-- JWT access tokens (15 min) + httpOnly, `sameSite: strict` refresh token cookies (7 days),
-  rotated on every refresh, with a `refreshTokenVersion` field on `User` so logout instantly
-  invalidates any outstanding refresh token.
-- Passwords hashed with Argon2.
-- The `aadhaarHash` uniqueness check hashes **only** `(Aadhaar last 4 + DOB)`, salted —
-  deliberately excluding phone number, because `User.phone` already has its own unique
-  constraint. Folding phone into the hash would let the same person re-register under a new
-  phone number slip past the exact-match check entirely (see `backend/src/utils/hash.ts`).
-- Rate limiting (Redis-backed when available, in-memory fallback otherwise): 100 req/15min
-  general, 10 req/15min on auth routes.
-- Helmet + CORS locked to `FRONTEND_ORIGIN`, Zod validation on every mutating route, Pino
-  structured logging with a request ID per request.
+### Public & Entrepreneur Routes
+- `POST /api/auth/register` — Register new beneficiary (with Aadhaar hash deduplication).
+- `POST /api/auth/login` — Authenticate and issue access JWT + httpOnly refresh cookie.
+- `POST /api/auth/refresh` — Rotate refresh token and issue new access token.
+- `POST /api/auth/logout` — Revoke active token version and clear cookies.
+- `POST /api/calculator/compute` — Pure deterministic financial calculation and amortization schedule.
+- `POST /api/applications` — Create business application.
+- `POST /api/reports/generate/:applicationId` — Generate AI feasibility report.
+- `GET /api/reports/:applicationId` — Retrieve existing feasibility report.
+- `GET /api/partners/nearby` — Query nearby channel partners filtered by NPA status.
+
+### Admin & Channel Partner Routes
+- `GET /api/admin/schemes` — View active lending schemes and interest slabs.
+- `PUT /api/admin/schemes/:id` — Update scheme interest rates, slabs, and tenures.
+- `GET /api/admin/duplicates` — View flagged duplicate applicant review queue.
+- `POST /api/admin/duplicates/:id/resolve` — Approve or reject flagged duplicate applications.
+- `GET /api/partner/applications` — Channel partner incoming applications queue.
+- `PUT /api/partner/applications/:id/decision` — Channel partner application decision (ACCEPTED / REJECTED).
 
 ---
 
-## 8. Demo script suggestion
+## Demo Credentials
 
-1. Land on `/` — explain the problem in one sentence.
-2. Click **"See a sample report"** → walks through Sunita's full report with zero setup,
-   zero network dependency risk.
-3. Then register a **new** account live and run the wizard end-to-end with your own numbers
-   to prove it isn't just a canned demo — this is where the real Gemini call + Overpass map
-   + streaming-style reveal happen.
-4. Show the Admin dashboard's duplicate-review queue and scheme editor.
-5. Show the Partner dashboard, and explicitly point out the seeded high-NPA partner that gets
-   filtered out of routing — a concrete, checkable claim.
+For judging and evaluation, the database seed includes pre-configured personas:
+
+| Role | Phone | Password | Description |
+|---|---|---|---|
+| **Entrepreneur** | `9999900001` | `Demo@12345` | "Sunita" — Dairy Entrepreneur persona with pre-generated report |
+| **Channel Partner** | `9999900002` | `Partner@12345` | Branch Manager at State Channelizing Agency (SCA) |
+| **Administrator** | `9999900003` | `Admin@12345` | MoSJE Department Administrator |
+
+*Note: Clicking **"See a sample report"** on the landing page loads the complete Sunita feasibility report instantly without requiring login or live API connectivity.*
+
+---
+
+## License
+
+This project is developed for the **Smart India Hackathon 2026** under the **Ministry of Social Justice & Empowerment (MoSJE)**. Distributed under the MIT License.
