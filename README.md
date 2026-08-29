@@ -1,4 +1,4 @@
-# Gram Vyapaar (ग्राम व्यापार)
+# Gram Vyapaar 
 
 > **AI-Driven Hyper-Local Business Advisory & Concessional Financial Structuring Platform**  
 > *Developed for Smart India Hackathon (SIH) | Ministry of Social Justice & Empowerment (MoSJE)*  
