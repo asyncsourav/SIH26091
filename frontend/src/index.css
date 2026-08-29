@@ -1,0 +1,37 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  body {
+    @apply bg-ink-900 text-paper-100 font-body antialiased;
+  }
+  h1, h2, h3, h4 {
+    @apply font-display;
+  }
+  :focus-visible {
+    outline: 2px solid theme("colors.turmeric.400");
+    outline-offset: 2px;
+  }
+}
+
+@layer utilities {
+  /* Signature motif: a woven "stitch line" divider referencing handloom
+     thread-work — used sparingly at section boundaries and the wizard's
+     step tracker, never as generic decoration. */
+  .stitch-divider {
+    height: 2px;
+    @apply bg-stitch-line text-turmeric-500/60;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+    }
+  }
+}

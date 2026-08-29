@@ -1,0 +1,167 @@
+// Gram Vyapaar — Prisma schema
+// Target: PostgreSQL (Neon-compatible) with pgvector + pg_trgm extensions enabled.
+// Run once against your database before the first migration:
+//   CREATE EXTENSION IF NOT EXISTS vector;
+//   CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ENTREPRENEUR
+  ADMIN
+  PARTNER
+}
+
+enum ApplicationStatus {
+  DRAFT
+  SUBMITTED
+  ROUTED
+  APPROVED
+  REJECTED
+}
+
+enum DuplicateReviewStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum PartnerType {
+  SCA
+  PSB
+  RRB
+  NBFC_MFI
+}
+
+model User {
+  id                  String   @id @default(uuid())
+  phone               String   @unique
+  aadhaarHash         String?  @unique // salted hash of (aadhaarLast4 + dob) ONLY — never phone, never raw Aadhaar
+  name                String
+  role                Role     @default(ENTREPRENEUR)
+  village             String
+  block               String
+  district            String
+  latitude            Float?
+  longitude           Float?
+  passwordHash        String
+  refreshTokenVersion Int      @default(0)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  applications          Application[]
+  duplicateReviewsMade  DuplicateReview[] @relation("ReviewedBy")
+
+  @@index([village, district])
+}
+
+model Scheme {
+  id               String   @id @default(uuid())
+  name             String   // "Micro Finance Scheme" | "Term Loan Scheme"
+  minProjectCost   Decimal  @db.Decimal(14, 2)
+  maxProjectCost   Decimal  @db.Decimal(14, 2)
+  maxLoanPct       Decimal  @db.Decimal(4, 3) // e.g. 0.900
+  interestRate     Decimal  @db.Decimal(5, 2) // e.g. 6.50
+  tenureMonths     Int
+  moratoriumMonths Int
+  sourceDocUrl     String?
+  active           Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  applications     Application[]
+  docChunks        SchemeDocChunk[]
+}
+
+model Application {
+  id               String            @id @default(uuid())
+  userId           String
+  user             User              @relation(fields: [userId], references: [id])
+  marginCapital    Decimal           @db.Decimal(14, 2)
+  projectCost      Decimal           @db.Decimal(14, 2)
+  loanAmount       Decimal           @db.Decimal(14, 2)
+  schemeId         String?
+  scheme           Scheme?           @relation(fields: [schemeId], references: [id])
+  businessCategory String
+  status           ApplicationStatus @default(DRAFT)
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+
+  aiReport         AIReport?
+  routedPartners   PartnerRouting[]
+
+  @@index([userId])
+}
+
+model AIReport {
+  id                  String      @id @default(uuid())
+  applicationId       String      @unique
+  application         Application @relation(fields: [applicationId], references: [id])
+  marketReach         Json
+  opportunityAnalysis Json
+  swot                Json
+  threats             Json
+  competitorDensity   Json
+  pricingSuggestion   Json
+  rawSources          Json     // which SchemeDocChunk ids were retrieved for grounding
+  isStaticFallback    Boolean  @default(false) // true only for the seeded demo persona report
+  generatedAt         DateTime @default(now())
+}
+
+model SchemeDocChunk {
+  id        String                      @id @default(uuid())
+  schemeId  String
+  scheme    Scheme                      @relation(fields: [schemeId], references: [id])
+  content   String
+  embedding Unsupported("vector(768)")?
+  createdAt DateTime                    @default(now())
+}
+
+model Partner {
+  id         String      @id @default(uuid())
+  name       String
+  type       PartnerType
+  village    String?
+  block      String?
+  district   String?
+  latitude   Float
+  longitude  Float
+  hasHighNPA Boolean     @default(false)
+  active     Boolean     @default(true)
+  createdAt  DateTime    @default(now())
+
+  routedApplications PartnerRouting[]
+}
+
+model PartnerRouting {
+  id            String      @id @default(uuid())
+  applicationId String
+  application   Application @relation(fields: [applicationId], references: [id])
+  partnerId     String
+  partner       Partner     @relation(fields: [partnerId], references: [id])
+  distanceKm    Float
+  decision      String      @default("PENDING") // PENDING | ACCEPTED | REJECTED
+  decidedAt     DateTime?
+  createdAt     DateTime    @default(now())
+
+  @@unique([applicationId, partnerId])
+}
+
+model DuplicateReview {
+  id              String                @id @default(uuid())
+  applicantId     String
+  matchedUserId   String
+  similarityScore Float
+  status          DuplicateReviewStatus @default(PENDING)
+  reviewedById    String?
+  reviewedBy      User?                 @relation("ReviewedBy", fields: [reviewedById], references: [id])
+  notes           String?
+  createdAt       DateTime              @default(now())
+}

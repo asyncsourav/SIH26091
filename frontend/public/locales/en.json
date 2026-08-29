@@ -1,0 +1,91 @@
+{
+  "nav": {
+    "home": "Home",
+    "myApplications": "My Applications",
+    "admin": "Admin",
+    "partner": "Partner Dashboard",
+    "login": "Log in",
+    "register": "Register",
+    "logout": "Log out"
+  },
+  "landing": {
+    "eyebrow": "Ministry of Social Justice & Empowerment",
+    "title": "Know your business before you borrow.",
+    "subtitle": "Enter your village, your available capital, and your business idea — get an instant loan structure and a hyper-local feasibility report grounded in real government scheme data.",
+    "ctaStart": "Start your feasibility report",
+    "ctaDemo": "See a sample report (Meet Sunita)"
+  },
+  "wizard": {
+    "step1Title": "Where are you starting your business?",
+    "village": "Village",
+    "block": "Block",
+    "district": "District",
+    "step2Title": "How much capital do you have available?",
+    "marginCapitalLabel": "Available margin capital (₹)",
+    "livePreview": "Live preview",
+    "step3Title": "What kind of business are you planning?",
+    "category": "Business category",
+    "next": "Next",
+    "back": "Back",
+    "submit": "Generate my feasibility report"
+  },
+  "categories": {
+    "dairy": "Dairy",
+    "retail": "Retail / Kirana",
+    "textiles": "Textiles / Handloom",
+    "poultry": "Poultry",
+    "agribusiness": "Agribusiness",
+    "handicrafts": "Handicrafts"
+  },
+  "calculator": {
+    "title": "Your financial structure",
+    "projectCost": "Total project cost",
+    "loanAmount": "Loan eligibility (90%)",
+    "yourContribution": "Your margin contribution (10%)",
+    "scheme": "Matching scheme",
+    "interestRate": "Interest rate",
+    "tenure": "Repayment tenure",
+    "moratorium": "Moratorium period",
+    "emiTitle": "Quarterly repayment schedule",
+    "outOfRange": "This project cost exceeds the ₹50 lakh Term Loan ceiling. No matching scheme is currently available."
+  },
+  "report": {
+    "generating": "Generating your feasibility report...",
+    "marketReach": "Market reach",
+    "opportunity": "Opportunity analysis",
+    "swot": "SWOT analysis",
+    "strengths": "Strengths",
+    "weaknesses": "Weaknesses",
+    "opportunities": "Opportunities",
+    "threats": "Threats",
+    "competitorDensity": "Competitor density",
+    "pricing": "Pricing suggestion",
+    "sources": "Sources",
+    "sourcesEmpty": "No specific scheme documents were retrieved for this report.",
+    "downloadPdf": "Download business plan (PDF)",
+    "demoNotice": "This is a pre-generated sample report for the demo persona."
+  },
+  "admin": {
+    "title": "Admin dashboard",
+    "duplicateQueue": "Duplicate applicant review",
+    "schemes": "Scheme management",
+    "approve": "Approve",
+    "reject": "Reject",
+    "similarity": "Similarity score"
+  },
+  "partner": {
+    "title": "Incoming applications",
+    "accept": "Accept",
+    "reject": "Reject",
+    "distance": "Distance"
+  },
+  "auth": {
+    "phone": "Phone number",
+    "password": "Password",
+    "name": "Full name",
+    "loginTitle": "Log in to Gram Vyapaar",
+    "registerTitle": "Create your account",
+    "noAccount": "Don't have an account?",
+    "haveAccount": "Already have an account?"
+  }
+}
